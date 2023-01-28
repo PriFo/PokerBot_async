@@ -9,15 +9,17 @@ BOT: Bot = Bot(token=API_TOKEN)
 DP: Dispatcher = Dispatcher(BOT)
 
 
+@DP.message_handler()
 @print_async_func()
-async def answer_message(message: types.Message):
-    ...
+async def answer_message(message: types.Message, **_):
+    await message.answer(message.text)
 
 
-@print_async_func()
-async def start_bot() -> None:
+@print_func
+def start_bot() -> None:
     """
     Function to start bot with printing information of bot into console
     :return: None
     """
-    await DP.start_polling()
+    print(f'Start bot...')
+    executor.start_polling(DP)

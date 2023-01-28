@@ -16,14 +16,14 @@ def get_dict_argv():
     return kwargs
 
 
-@print_async_func()
-async def main(*args):
+@print_func
+def main(*args):
     args = args[0]
     try:
-        await start_bot()
+        start_bot()
     except Exception as e:
         print(e)
 
 
 if __name__ == '__main__':
-    run(main(get_dict_argv()))
+    main(get_dict_argv())
