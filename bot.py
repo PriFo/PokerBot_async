@@ -9,9 +9,45 @@ BOT: Bot = Bot(token=API_TOKEN)
 DP: Dispatcher = Dispatcher(BOT)
 
 
-@DP.message_handler()
+@DP.message_handler(text=["Blackjack"])
 @print_async_func()
-async def answer_message(message: types.Message, **_):
+async def answer_blackjack(message: types.Message, **_):
+    await message.answer(message.text)
+
+
+@DP.message_handler(text=["Правила покера"])
+@print_async_func()
+async def answer_poker_rules(message: types.Message, **_):
+    await message.answer(message.text)
+
+
+@DP.message_handler(text=["Правила Blackjack"])
+@print_async_func()
+async def answer_blackjack_rules(message: types.Message, **_):
+    await message.answer(message.text)
+
+
+@DP.message_handler(text=["В главное меню"])
+@print_async_func()
+async def answer_main_menu(message: types.Message, **_):
+    await message.answer(message.text)
+
+
+@DP.message_handler(text=["Покер"])
+@print_async_func()
+async def answer_poker(message: types.Message, **_):
+    await message.answer(message.text)
+
+
+@DP.message_handler(text=["Профиль"])
+@print_async_func()
+async def answer_profile(message: types.Message, **_):
+    await message.answer(message.text)
+
+
+@DP.message_handler(text=["Что умеет бот?"])
+@print_async_func()
+async def answer_bot_skills(message: types.Message, **_):
     await message.answer(message.text)
 
 
