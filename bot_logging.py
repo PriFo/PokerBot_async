@@ -15,7 +15,7 @@ class LogDB:
         """
         text = '\"' + text + '\"'
         self.__cur.execute(
-            '''insert into log(log_date, log_data) values (current_timestamp, ''' + text + ''')'''
+            f'''insert into log(log_date, log_data) values (current_timestamp, {text})'''
         )
         self.__db.commit()
 
@@ -35,10 +35,70 @@ class LogDB:
         :return: None
         """
         self.__cur.execute(
-            '''insert into users(user_id, user_last_name, user_name, user_username) values 
-            (''' + str(user_id) + ', ' + user_lastname + ', ' + user_name + ', ' + user_username + ''')'''
+            f'''insert into users(user_id, user_last_name, user_name, user_username) values 
+            ({str(user_id)}, {user_lastname}, {user_name}, {user_username})'''
         )
         self.__db.commit()
+
+    def input_profile_value(self, user_id: [str, int]) -> None:
+        self.__cur.execute(
+            f"""insert into profiles(profile_user_id) values ({str(user_id)})"""
+        )
+        self.__db.commit()
+
+    def get_user_value(self, user_id: [str, int]) -> [dict, None]:
+        """
+        Getting user info from DB
+        :param user_id
+        :return:
+        """
+        self.__cur.execute(
+            f"""select user_last_name,
+            user_name,
+            user_username
+            from users
+            where user_id='{str(user_id)}'"""
+        )
+        result_list: list = self.__cur.fetchall()
+        if result_list:
+            result: dict = {
+                'id': str(user_id),
+                'last_name': result_list[0],
+                'name': result_list[1],
+                'username': result_list[2]
+            }
+            return result
+        else:
+            return None
+
+    def get_profile_value(self, user_id: [str, int]) -> [dict, None]:
+        self.__cur.execute(
+            f"""select profile_money, 
+                profile_level, 
+                profile_exp, 
+                count_blackjack, 
+                count_poker, 
+                wins_blackjack, 
+                wins_poker 
+                from profiles 
+                where profile_user_id='{str(user_id)}'"""
+        )
+        result_list: list = self.__cur.fetchall()
+        if result_list:
+            result_list = result_list.pop(0)
+            result: dict = {
+                'id': str(user_id),
+                'money': result_list[0],
+                'level': result_list[1],
+                'exp': result_list[2],
+                'count_blackjack': result_list[3],
+                'count_poker': result_list[4],
+                'wins_blackjack': result_list[5],
+                'wins_poker': result_list[6]
+            }
+            return result
+        else:
+            return None
 
     def do_script(self, script: str):
         self.__cur.execute(
@@ -55,6 +115,11 @@ class LogDB:
             """select * from log"""
         )
         result = self.__cur.fetchall()
+        return result
+
+    def get_promos(self):
+        self.__cur.execute("""select * from promo""")
+        result: list = self.__cur.fetchall()
         return result
 
     def trunc_logs(self):
@@ -87,8 +152,8 @@ def print_func(func):
         result = None
         out_str: str
         try:
-            out_str = 'Calling ' + str(func.__name__) + ' with arguments ' + str(args) + str(kwargs)
-            # db.input_log_value(out_str)
+            out_str = f'Calling {str(func.__name__)} with arguments {str(args)} {str(kwargs)}'
+            # db.input_log_value(our_str)
             print(out_str)
             result = func(*args, **kwargs)
         except Exception as e:
@@ -96,10 +161,10 @@ def print_func(func):
             print(e)
             return result
         finally:
-            out_str = 'Stopping ' + str(func.__name__)
+            out_str = f'Stopping {str(func.__name__)}'
             # db.input_log_value(out_str)
             print(out_str)
-            out_str = 'Result: ' + str(result)
+            out_str = f'Result: {str(result)}'
             # db.input_log_value(out_str)
             print(out_str)
             return result

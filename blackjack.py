@@ -1,5 +1,6 @@
 
 
 class Blackjack:
-    def __new__(cls):  # , *args, **kwargs
+
+    def __init__(self):
         ...

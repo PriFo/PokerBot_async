@@ -1,8 +1,7 @@
-from asyncio import run
 from sys import argv
 
 from bot import start_bot
-from bot_logging import print_func, print_async_func
+from bot_logging import print_func
 
 
 @print_func
@@ -20,7 +19,10 @@ def get_dict_argv():
 def main(*args):
     args = args[0]
     try:
-        start_bot()
+        if args.get('dev'):
+            start_bot(True)
+        else:
+            start_bot()
     except Exception as e:
         print(e)
 
