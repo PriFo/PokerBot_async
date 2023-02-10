@@ -3,12 +3,22 @@ from os import getenv
 from dotenv import load_dotenv
 from bot_logging import print_func, print_async_func, LogDB
 from user import Profile
+import strings
+import markups
 
 PROFILES: dict = {}
 load_dotenv('config.env')
 API_TOKEN: str = getenv('TOKEN')
 BOT: Bot = Bot(token=API_TOKEN)
 DP: Dispatcher = Dispatcher(BOT)
+
+
+@DP.message_handler(commands=['help'])
+async def answer_help_command(message: types.Message, **_):
+    await message.answer(
+        text=strings.ASK_FOR_HELP,
+        reply_markup=markups.ASK_HELP_MARKUP
+    )
 
 
 @print_async_func()
@@ -43,7 +53,9 @@ async def answer_profile(message: types.Message, **_):
 
 @print_async_func()
 async def answer_bot_skills(message: types.Message, **_):
-    await message.answer(message.text)
+    await message.answer(
+        text=message.text
+    )
 
 
 @print_async_func()
