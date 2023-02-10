@@ -1,12 +1,14 @@
 from aiogram import Bot, Dispatcher, executor, types
 from os import getenv
 from dotenv import load_dotenv
-from bot_logging import print_func, print_async_func, LogDB
+from bot_logging import print_func, print_async_func
+from cards import Hand, Cards
 from user import Profile
 import strings
 import markups
 
 PROFILES: dict = {}
+BLACKJACK_OFFLINE: dict = {}
 load_dotenv('config.env')
 API_TOKEN: str = getenv('TOKEN')
 BOT: Bot = Bot(token=API_TOKEN)
@@ -74,15 +76,15 @@ async def message_handler(message: types.Message, **_):
     elif 'профиль' in message.text.lower():
         await answer_profile(message)
     elif 'правила покера' in message.text.lower():
-        await answer_profile(message)
+        await answer_poker_rules(message)
     elif 'правила blackjack' in message.text.lower():
-        await answer_profile(message)
+        await answer_blackjack_rules(message)
     elif 'в главное меню' in message.text.lower():
-        await answer_profile(message)
+        await answer_main_menu(message)
     elif 'покер' in message.text.lower():
-        await answer_profile(message)
+        await answer_poker(message)
     elif 'blackjack' in message.text.lower():
-        await answer_profile(message)
+        await answer_blackjack(message)
     else:
         await answer_nothing(message)
 

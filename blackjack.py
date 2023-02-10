@@ -13,6 +13,17 @@ class Blackjack:
         self.__message_for_bot: [types.Message, None] = None
         self.__bet: int = 0
 
+    def __hash__(self):
+        return hash((
+            self.__bet,
+            self.__bot,
+            self.__message_for_bot,
+            self.__message_for_user,
+            self.__user_id,
+            self.__user_hand,
+            self.__cards
+        ))
+
     @property
     def cards(self):
         return self.__cards
