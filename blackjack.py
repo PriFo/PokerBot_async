@@ -65,4 +65,11 @@ class BotBlackjack:
     """Класс, хранящий руку бота для игры в Blackjack"""
 
     def __init__(self):
-        self.hand: Hand = Hand()
+        self.__hand: Hand = Hand()
+
+    @property
+    def hand(self):
+        return self.__hand
+
+    def __hash__(self):
+        return hash(self.__hand)

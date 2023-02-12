@@ -148,24 +148,24 @@ def print_func(func):
     :return: Result of function
     """
     def _wrapper(*args, **kwargs):
-        # db: LogDB = LogDB()
+        db: LogDB = LogDB()
         result = None
         out_str: str
         try:
             out_str = f'Calling {str(func.__name__)} with arguments {str(args)} {str(kwargs)}'
-            # db.input_log_value(our_str)
+            db.input_log_value(out_str)
             print(out_str)
             result = func(*args, **kwargs)
         except Exception as e:
-            # db.input_log_value(str(e))
+            db.input_log_value(str(e))
             print(e)
             return result
         finally:
             out_str = f'Stopping {str(func.__name__)}'
-            # db.input_log_value(out_str)
+            db.input_log_value(out_str)
             print(out_str)
             out_str = f'Result: {str(result)}'
-            # db.input_log_value(out_str)
+            db.input_log_value(out_str)
             print(out_str)
             return result
 
@@ -179,24 +179,24 @@ def print_async_func():
     """
     def _wrapper(func):
         async def _wrapped(*args, **kwargs):
-            # db: LogDB = LogDB()
+            db: LogDB = LogDB()
             result = None
             out_str: str
             try:
-                out_str = 'Calling coroutine ' + str(func.__name__) + ' with arguments ' + str(args) + str(kwargs)
-                # db.input_log_value(out_str)
+                out_str = f'Calling coroutine {str(func.__name__)} with arguments {str(args)} {str(kwargs)}'
+                db.input_log_value(out_str)
                 print(out_str)
                 result = await func(*args, **kwargs)
             except Exception as e:
-                # db.input_log_value(str(e))
+                db.input_log_value(str(e))
                 print(e)
                 return result
             finally:
-                out_str = 'Stopping coroutine ' + str(func.__name__)
-                # db.input_log_value(out_str)
+                out_str = f'Stopping coroutine {str(func.__name__)}'
+                db.input_log_value(out_str)
                 print(out_str)
-                out_str = 'Result: ' + str(result)
-                # db.input_log_value(out_str)
+                out_str = f'Result: {str(result)}'
+                db.input_log_value(out_str)
                 print(out_str)
                 return result
         return _wrapped

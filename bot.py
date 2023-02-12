@@ -2,10 +2,10 @@ from aiogram import Bot, Dispatcher, executor, types
 from os import getenv
 from dotenv import load_dotenv
 from bot_logging import print_func, print_async_func
-from cards import Hand, Cards
 from user import Profile
 import strings
 import markups
+
 
 PROFILES: dict = {}
 BLACKJACK_OFFLINE: dict = {}
@@ -15,11 +15,21 @@ BOT: Bot = Bot(token=API_TOKEN)
 DP: Dispatcher = Dispatcher(BOT)
 
 
+@print_async_func()
 @DP.message_handler(commands=['help'])
 async def answer_help_command(message: types.Message, **_):
     await message.answer(
         text=strings.ASK_FOR_HELP,
         reply_markup=markups.ASK_HELP_MARKUP
+    )
+
+
+@print_async_func()
+@DP.message_handler(commands=['start'])
+async def answer_help_command(message: types.Message, **_):
+    await message.answer(
+        text=strings.START_TEXT,
+        reply_markup=markups.MAIN_MARKUP
     )
 
 

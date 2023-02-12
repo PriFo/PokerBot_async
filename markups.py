@@ -1,6 +1,8 @@
 from aiogram import types
+from bot_logging import print_func
 
 
+@print_func
 def __do_ask_help_markup() -> types.ReplyKeyboardMarkup:
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     btn1 = types.KeyboardButton("Правила покера")
@@ -13,6 +15,7 @@ def __do_ask_help_markup() -> types.ReplyKeyboardMarkup:
     return markup
 
 
+@print_func
 def __do_leave_markup() -> types.ReplyKeyboardMarkup:
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     btn1 = types.KeyboardButton("В главное меню")
@@ -21,6 +24,7 @@ def __do_leave_markup() -> types.ReplyKeyboardMarkup:
 
 
 # функция для создания разметки клавиатуры для главного меню
+@print_func
 def __do_main_markup() -> types.ReplyKeyboardMarkup:
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     btn1 = types.KeyboardButton("Покер")
@@ -34,6 +38,7 @@ def __do_main_markup() -> types.ReplyKeyboardMarkup:
 
 
 # функция для создания разметки клавиатуры сообщения для игры в Blackjack
+@print_func
 def __do_blackjack_markup() -> types.InlineKeyboardMarkup:
     markup = types.InlineKeyboardMarkup()
     btn1 = types.InlineKeyboardButton(text="Взять карту", callback_data='take_card')
@@ -43,6 +48,7 @@ def __do_blackjack_markup() -> types.InlineKeyboardMarkup:
 
 
 # функция для создания разметки клавиатуры сообщения для игры в покер
+@print_func
 def __do_poker_menu_markup() -> types.InlineKeyboardMarkup:
     markup = types.InlineKeyboardMarkup()
     btn1 = types.InlineKeyboardButton(text="Создать игру", callback_data='create_poker_game')
@@ -53,6 +59,7 @@ def __do_poker_menu_markup() -> types.InlineKeyboardMarkup:
     return markup
 
 
+@print_func
 def __do_profile_menu_markup() -> types.InlineKeyboardMarkup:
     markup = types.InlineKeyboardMarkup()
     btn1 = types.InlineKeyboardButton(text="Взять бонус", callback_data='profile_bonus')
@@ -63,6 +70,7 @@ def __do_profile_menu_markup() -> types.InlineKeyboardMarkup:
     return markup
 
 
+@print_func
 def __do_blackjack_bet_markup() -> types.InlineKeyboardMarkup:
     markup = types.InlineKeyboardMarkup()
     btn1 = types.InlineKeyboardButton(text="Поднять ставку x2", callback_data='blackjack_up')
@@ -80,6 +88,7 @@ def __do_blackjack_bet_markup() -> types.InlineKeyboardMarkup:
     return markup
 
 
+# @print_func
 # def __do_poker_list_markup(index: int) -> types.InlineKeyboardMarkup:
 #     markup = types.InlineKeyboardMarkup()
 #     btn1 = types.InlineKeyboardButton(text=str(active_index[index][1] + 1), callback_data='first_poker')
@@ -96,6 +105,7 @@ def __do_blackjack_bet_markup() -> types.InlineKeyboardMarkup:
 #     return markup
 
 
+@print_func
 def __do_poker_wait_markup() -> types.InlineKeyboardMarkup:
     markup = types.InlineKeyboardMarkup()
     btn1 = types.InlineKeyboardButton(text="Выйти из игры", callback_data='exit_from_poker_game')
@@ -103,6 +113,7 @@ def __do_poker_wait_markup() -> types.InlineKeyboardMarkup:
     return markup
 
 
+@print_func
 def __do_poker_game_markup() -> types.InlineKeyboardMarkup:
     markup = types.InlineKeyboardMarkup()
     btn1 = types.InlineKeyboardButton(text='Поднять', callback_data='raise_bet_poker')
@@ -125,4 +136,4 @@ MAIN_MARKUP: types.ReplyKeyboardMarkup = __do_main_markup()
 BLACKJACK_BET_MARKUP: types.InlineKeyboardMarkup = __do_blackjack_bet_markup()
 BLACKJACK_MARKUP: types.InlineKeyboardMarkup = __do_blackjack_markup()
 PROFILE_MENU_MARKUP: types.InlineKeyboardMarkup = __do_profile_menu_markup()
-
+POKER_LIST_MARKUP: types.InlineKeyboardMarkup
