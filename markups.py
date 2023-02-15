@@ -63,9 +63,11 @@ def __do_poker_menu_markup() -> types.InlineKeyboardMarkup:
 def __do_profile_menu_markup() -> types.InlineKeyboardMarkup:
     markup = types.InlineKeyboardMarkup()
     btn1 = types.InlineKeyboardButton(text="Взять бонус", callback_data='profile_bonus')
-    btn2 = types.InlineKeyboardButton(text="Закрыть меню", callback_data='exit_profile')
-    btn3 = types.InlineKeyboardButton(text="Сменить имя", callback_data='change_name')
+    btn2 = types.InlineKeyboardButton(text='Статистика', callback_data='profile_info')
+    btn3 = types.InlineKeyboardButton(text="Закрыть меню", callback_data='exit_profile')
+    btn4 = types.InlineKeyboardButton(text="Сменить имя", callback_data='change_name')
     markup.add(btn1, btn2)
+    markup.add(btn4)
     markup.add(btn3)
     return markup
 
@@ -137,3 +139,4 @@ BLACKJACK_BET_MARKUP: types.InlineKeyboardMarkup = __do_blackjack_bet_markup()
 BLACKJACK_MARKUP: types.InlineKeyboardMarkup = __do_blackjack_markup()
 PROFILE_MENU_MARKUP: types.InlineKeyboardMarkup = __do_profile_menu_markup()
 POKER_LIST_MARKUP: types.InlineKeyboardMarkup
+REMOVE_MARKUP: types.ReplyKeyboardRemove = types.ReplyKeyboardRemove()

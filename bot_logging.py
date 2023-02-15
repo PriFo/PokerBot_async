@@ -1,4 +1,5 @@
 from sqlite3 import connect
+from traceback import format_exc
 
 
 class LogDB:
@@ -13,9 +14,10 @@ class LogDB:
         :param text: Log's text
         :return: None
         """
-        text = '\"' + text + '\"'
+        text = '\'' + text.replace('\'', '_').replace('\"', '_') + '\''
         self.__cur.execute(
-            f'''insert into log(log_date, log_data) values (current_timestamp, {text})'''
+            f'''insert into log(log_date, log_data) values 
+                (current_timestamp, {text})'''
         )
         self.__db.commit()
 
@@ -36,13 +38,38 @@ class LogDB:
         """
         self.__cur.execute(
             f'''insert into users(user_id, user_last_name, user_name, user_username) values 
-            ({str(user_id)}, {user_lastname}, {user_name}, {user_username})'''
+            ('{str(user_id)}', '{user_lastname}', '{user_name}', '{user_username}')'''
         )
         self.__db.commit()
 
-    def input_profile_value(self, user_id: [str, int]) -> None:
+    def input_profile_value(self, user_id: [str, int], username: str = None) -> None:
+        if username:
+            self.__cur.execute(
+                f"""insert into profiles(profile_user_id, profile_username) values 
+                    ('{str(user_id)}', '{str(username)}')"""
+            )
+            self.__db.commit()
+        else:
+            self.__cur.execute(
+                f"""insert into profiles(profile_user_id, profile_username) values 
+                ('{str(user_id)}', '{str(user_id)}')"""
+            )
+            self.__db.commit()
+
+    def update_profile_info(self, profile_info: dict):
+        print('try to updating\n', profile_info)
         self.__cur.execute(
-            f"""insert into profiles(profile_user_id) values ({str(user_id)})"""
+            f"""update profiles set 
+                profile_username='{profile_info.get('username')}',
+                profile_money='{str(profile_info.get('money'))}',
+                profile_exp='{str(profile_info.get('exp'))}',
+                profile_level='{str(profile_info.get('level'))}',
+                count_blackjack='{str(profile_info.get('count_blackjack'))}',
+                count_poker='{str(profile_info.get('count_poker'))}',
+                wins_blackjack='{str(profile_info.get('wins_blackjack'))}',
+                wins_poker='{str(profile_info.get('wins_poker'))}',
+                bonus_date='{str(profile_info.get('bonus_date'))}'
+                where profile_user_id='{str(profile_info.get('user_id'))}'"""
         )
         self.__db.commit()
 
@@ -79,7 +106,9 @@ class LogDB:
                 count_blackjack, 
                 count_poker, 
                 wins_blackjack, 
-                wins_poker 
+                wins_poker,
+                bonus_date,
+                profile_username
                 from profiles 
                 where profile_user_id='{str(user_id)}'"""
         )
@@ -94,7 +123,9 @@ class LogDB:
                 'count_blackjack': result_list[3],
                 'count_poker': result_list[4],
                 'wins_blackjack': result_list[5],
-                'wins_poker': result_list[6]
+                'wins_poker': result_list[6],
+                'bonus_date': result_list[7],
+                'username': result_list[8]
             }
             return result
         else:
@@ -119,6 +150,11 @@ class LogDB:
 
     def get_promos(self):
         self.__cur.execute("""select * from promo""")
+        result: list = self.__cur.fetchall()
+        return result
+
+    def get_ids(self):
+        self.__cur.execute("""select user_id from users""")
         result: list = self.__cur.fetchall()
         return result
 
@@ -188,8 +224,8 @@ def print_async_func():
                 print(out_str)
                 result = await func(*args, **kwargs)
             except Exception as e:
-                db.input_log_value(str(e))
-                print(e)
+                db.input_log_value(format_exc())
+                print(format_exc(), e)
                 return result
             finally:
                 out_str = f'Stopping coroutine {str(func.__name__)}'

@@ -4,14 +4,14 @@ from aiogram import types
 
 class Blackjack:
 
-    def __init__(self, user_id: [str, int], msg_4_user: types.Message):
+    def __init__(self, user_id: [str, int]):
         self.__cards: Cards = Cards()
         self.__user_id: [str, int] = user_id
         self.__user_hand: Hand = Hand()
         self.__bot: BotBlackjack = BotBlackjack()
-        self.__message_for_user: types.Message = msg_4_user
+        self.__message_for_user: [types.Message, None] = None
         self.__message_for_bot: [types.Message, None] = None
-        self.__bet: int = 0
+        self.__bet: int = 10
 
     def __hash__(self):
         return hash((
