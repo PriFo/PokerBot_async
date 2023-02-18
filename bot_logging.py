@@ -194,7 +194,7 @@ def print_func(func):
             result = func(*args, **kwargs)
         except Exception as e:
             db.input_log_value(str(e))
-            print(e)
+            print(format_exc(), e)
             return result
         finally:
             out_str = f'Stopping {str(func.__name__)}'
@@ -224,7 +224,7 @@ def print_async_func():
                 print(out_str)
                 result = await func(*args, **kwargs)
             except Exception as e:
-                db.input_log_value(format_exc())
+                db.input_log_value(str(e))
                 print(format_exc(), e)
                 return result
             finally:

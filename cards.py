@@ -74,6 +74,9 @@ class Cards:
     def __hash__(self):
         return hash((self.__cards,))
 
+    def get_card(self) -> Card:
+        return self.__cards.pop()
+
     @property
     def cards(self):
         return self.__cards
@@ -88,6 +91,15 @@ class Hand:
     def __hash__(self):
         return hash((self.__cards,))
 
+    def add_card(self, card: Card) -> None:
+        self.__cards.append(card)
+
+    def get_summary(self):
+        summary: int = 0
+        for i in self.__cards:
+            summary += i.value
+        return summary
+
     @property
-    def cards(self):
+    def cards(self) -> list:
         return self.__cards

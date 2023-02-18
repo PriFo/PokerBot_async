@@ -41,6 +41,7 @@ def __do_main_markup() -> types.ReplyKeyboardMarkup:
 @print_func
 def __do_blackjack_markup() -> types.InlineKeyboardMarkup:
     markup = types.InlineKeyboardMarkup()
+    # TODO: All callbacks
     btn1 = types.InlineKeyboardButton(text="Взять карту", callback_data='take_card')
     btn2 = types.InlineKeyboardButton(text="Удержать", callback_data='hold')
     markup.add(btn1, btn2)
@@ -51,6 +52,7 @@ def __do_blackjack_markup() -> types.InlineKeyboardMarkup:
 @print_func
 def __do_poker_menu_markup() -> types.InlineKeyboardMarkup:
     markup = types.InlineKeyboardMarkup()
+    # TODO: All callbacks
     btn1 = types.InlineKeyboardButton(text="Создать игру", callback_data='create_poker_game')
     btn2 = types.InlineKeyboardButton(text="Игры", callback_data='show_poker_games')
     btn3 = types.InlineKeyboardButton(text="Закрыть меню", callback_data='return_to_menu')
@@ -75,6 +77,7 @@ def __do_profile_menu_markup() -> types.InlineKeyboardMarkup:
 @print_func
 def __do_blackjack_bet_markup() -> types.InlineKeyboardMarkup:
     markup = types.InlineKeyboardMarkup()
+    # TODO: Start blackjack
     btn1 = types.InlineKeyboardButton(text="Поднять ставку x2", callback_data='blackjack_up')
     btn2 = types.InlineKeyboardButton(text="Понизить ставку x2", callback_data='blackjack_down')
     btn3 = types.InlineKeyboardButton(text="Максимальная ставка", callback_data='blackjack_max')
@@ -90,6 +93,7 @@ def __do_blackjack_bet_markup() -> types.InlineKeyboardMarkup:
     return markup
 
 
+# TODO: Реализовать создание данной разметки кнопок
 # @print_func
 # def __do_poker_list_markup(index: int) -> types.InlineKeyboardMarkup:
 #     markup = types.InlineKeyboardMarkup()
@@ -118,6 +122,7 @@ def __do_poker_wait_markup() -> types.InlineKeyboardMarkup:
 @print_func
 def __do_poker_game_markup() -> types.InlineKeyboardMarkup:
     markup = types.InlineKeyboardMarkup()
+    # TODO: All callbacks in this markup
     btn1 = types.InlineKeyboardButton(text='Поднять', callback_data='raise_bet_poker')
     btn2 = types.InlineKeyboardButton(text='Принять', callback_data='accept_bet_poker')
     btn3 = types.InlineKeyboardButton(text='Пас', callback_data='pass_poker')

@@ -3,6 +3,15 @@ from datetime import date, timedelta, datetime
 from bot_logging import LogDB
 
 
+BONUS: int = 1200
+LVL_BONUS: int = 2000
+EXP_MULTIPLIER: int = 50
+BLACKJACK_WIN_EXP_BOOST: int = 5
+BLACKJACK_GAME_EXP_BOOST: int = 2
+POKER_WIN_EXP_BOOST: int = 10
+POKER_GAME_EXP_BOOST: int = 3
+
+
 class Profile(object):
 
     def __init__(self, user_id: [str, int]):
@@ -160,3 +169,22 @@ class Profile(object):
             return True
         else:
             return False
+
+    def get_exp_for_next_level(self) -> int:
+        return self.__level * EXP_MULTIPLIER
+
+    def blackjack_win_exp_add(self):
+        self.__exp += BLACKJACK_WIN_EXP_BOOST
+
+    def blackjack_game_exp_add(self):
+        self.__exp += BLACKJACK_GAME_EXP_BOOST
+
+    def poker_win_exp_add(self):
+        self.__exp += POKER_WIN_EXP_BOOST
+
+    def poker_game_exp_add(self):
+        self.__exp += POKER_GAME_EXP_BOOST
+
+    def level_up(self) -> None:
+        self.__level += 1
+        self.__money += LVL_BONUS

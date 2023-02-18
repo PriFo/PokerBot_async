@@ -1,3 +1,5 @@
+# TODO: enter last commit in git and enter all editions in bot
+
 VERSION = 'beta 0.5'
 PATCH = ' patch '
 DEV_ID = '517965582'
