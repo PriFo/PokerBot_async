@@ -58,6 +58,14 @@ class Blackjack:
             self.__cards
         ))
 
+    def check_results(self) -> int:
+        if self.__user_hand.get_summary() < 21:
+            return 0
+        elif self.__user_hand.get_summary() == 21:
+            return 1
+        elif self.__user_hand.get_summary() > 21:
+            return 2
+
     def add_user_card(self) -> None:
         self.__user_hand.add_card(self.__cards.get_card())
 

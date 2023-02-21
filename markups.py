@@ -39,11 +39,11 @@ def __do_main_markup() -> types.ReplyKeyboardMarkup:
 
 # функция для создания разметки клавиатуры сообщения для игры в Blackjack
 @print_func
-def __do_blackjack_markup() -> types.InlineKeyboardMarkup:
+def __do_blackjack_offline_markup() -> types.InlineKeyboardMarkup:
     markup = types.InlineKeyboardMarkup()
     # TODO: All callbacks
-    btn1 = types.InlineKeyboardButton(text="Взять карту", callback_data='take_card')
-    btn2 = types.InlineKeyboardButton(text="Удержать", callback_data='hold')
+    btn1 = types.InlineKeyboardButton(text="Взять карту", callback_data='blackjack_offline_take_card')
+    btn2 = types.InlineKeyboardButton(text="Удержать", callback_data='blackjack_offline_hold')
     markup.add(btn1, btn2)
     return markup
 
@@ -141,7 +141,7 @@ POKER_MENU_MARKUP: types.InlineKeyboardMarkup = __do_poker_menu_markup()
 LEAVE_MARKUP: types.ReplyKeyboardMarkup = __do_leave_markup()
 MAIN_MARKUP: types.ReplyKeyboardMarkup = __do_main_markup()
 BLACKJACK_BET_MARKUP: types.InlineKeyboardMarkup = __do_blackjack_bet_markup()
-BLACKJACK_MARKUP: types.InlineKeyboardMarkup = __do_blackjack_markup()
+BLACKJACK_OFFLINE_MARKUP: types.InlineKeyboardMarkup = __do_blackjack_offline_markup()
 PROFILE_MENU_MARKUP: types.InlineKeyboardMarkup = __do_profile_menu_markup()
 POKER_LIST_MARKUP: types.InlineKeyboardMarkup
 REMOVE_MARKUP: types.ReplyKeyboardRemove = types.ReplyKeyboardRemove()

@@ -34,11 +34,24 @@ class ProfileForm(StatesGroup):
     username = State()
 
 
+@print_async_func()
 async def get_profile_text(cur_profile: Profile) -> str:
     return f'Здравствуйте, {cur_profile.username}\n' \
            f'Ваш уровень: {cur_profile.level}\n' \
            f'Ваши средства: {cur_profile.money} у.е.\n\n' \
            f'Что пожелаете?'
+
+
+@print_async_func()
+async def get_blackjack_offline_bot_text(game: Blackjack) -> str:
+    return f'Карты дилера: {game.bot.hand.get_str_cards()}\n' \
+           f'Сумма ваших карт: {game.user_hand.get_summary()}'
+
+
+@print_async_func()
+async def get_blackjack_offline_user_text(game: Blackjack) -> str:
+    return f'Ваши карты: {game.user_hand.get_str_cards()}\n' \
+           f'Сумма ваших карт: {game.user_hand.get_summary()}'
 
 
 @print_async_func()
@@ -206,8 +219,44 @@ async def manage_bet(query: types.CallbackQuery, **_):
 
 @DP.callback_query_handler(text='blackjack_start')
 @print_async_func()
-async def start_blackjack(query: types.CallbackQuery, **_):
-    ...
+async def start_blackjack(query: types.CallbackQuery, **_) -> None:
+    await query.answer(text='OK!')
+    game: Blackjack = BLACKJACK_OFFLINE.get(str(query.from_user.id))
+    game.message_for_user = await game.message_for_user.edit_text(
+        text=await get_blackjack_offline_user_text(game),
+        reply_markup=markups.BLACKJACK_OFFLINE_MARKUP
+    )
+    game.message_for_bot = await BOT.send_message(
+        chat_id=query.from_user.id,
+        text='Дилер ожидает вашего хода'
+    )
+
+
+@DP.callback_query_handler(text='blackjack_offline_take_card')
+@print_async_func()
+async def take_card_offline(query: types.CallbackQuery, **_) -> None:
+    await query.answer('OK!')
+    game: Blackjack = BLACKJACK_OFFLINE.get(str(query.from_user.id))
+    game.add_user_card()
+    game.message_for_user = await game.message_for_user.edit_text(
+        text=await get_blackjack_offline_user_text(game),
+        reply_markup=markups.BLACKJACK_OFFLINE_MARKUP
+    )
+    game.message_for_bot = await game.message_for_bot.edit_text(
+        text=''
+    )
+    # TODO: Add checking result of game in class Blackjack
+
+
+@DP.callback_query_handler(text='blackjack_offline_hold')
+@print_async_func()
+async def hold_offline(query: types.CallbackQuery, **_) -> None:
+    await query.answer('OK!')
+    game: Blackjack = BLACKJACK_OFFLINE.pop(str(query.from_user.id))
+    game.message_for_user = await game.message_for_user.edit_reply_markup(
+        reply_markup=None
+    )
+    # TODO: Add checking result of game in class Blackjack
 
 
 @DP.callback_query_handler(text='blackjack_stop')
@@ -268,6 +317,7 @@ async def bonus_profile(query: types.CallbackQuery, **_):
 @DP.callback_query_handler(text='change_name')
 @print_async_func()
 async def change_profile_name(query: types.CallbackQuery, **_):
+    await query.answer('OK!')
     await ProfileForm.username.set()
     msg_4_user: types.Message = PROFILES_MESSAGES.pop(str(query.from_user.id))
     await msg_4_user.edit_text(

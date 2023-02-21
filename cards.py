@@ -100,6 +100,12 @@ class Hand:
             summary += i.value
         return summary
 
+    def get_str_cards(self):
+        text: str = ''
+        for i in self.__cards:
+            text += str(i) + ' '
+        return text
+
     @property
     def cards(self) -> list:
         return self.__cards
