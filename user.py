@@ -2,10 +2,9 @@ from datetime import date, timedelta, datetime
 
 from bot_logging import LogDB
 
-
 BONUS: int = 1200
 LVL_BONUS: int = 2000
-EXP_MULTIPLIER: int = 50
+EXP_MULTIPLIER: int = 25
 BLACKJACK_WIN_EXP_BOOST: int = 5
 BLACKJACK_GAME_EXP_BOOST: int = 2
 POKER_WIN_EXP_BOOST: int = 10
@@ -59,11 +58,10 @@ class Profile(object):
         ))
 
     def __str__(self):
-        out_str = f'user_id: {self.__user_id}\nexp: {self.__exp}\nlevel: {self.__level}\n' \
-                  f'money: {self.__money}\ncount_poker: {self.__count_poker}\n' \
-                  f'count_blackjack: {self.__count_blackjack}\nwins_poker: {self.__wins_poker}\n' \
-                  f'wins_blackjack: {self.__wins_blackjack}'
-        return out_str
+        return f'user_id: {self.__user_id}\nexp: {self.__exp}\nlevel: {self.__level}\n' \
+                f'money: {self.__money}\ncount_poker: {self.__count_poker}\n' \
+                f'count_blackjack: {self.__count_blackjack}\nwins_poker: {self.__wins_poker}\n' \
+                f'wins_blackjack: {self.__wins_blackjack}'
 
     @property
     def user_id(self):
@@ -145,6 +143,12 @@ class Profile(object):
     def username(self, value):
         self.__username = value
 
+    def update_profile_info(self):
+        self.__read_profile(LogDB().get_profile_value(self.__user_id))
+
+    def save_profile_info(self):
+        LogDB().update_profile_info(self.get_dict())
+
     def __read_profile(self, profile_info: dict):
         self.__user_id = profile_info.get('id')
         self.__username = profile_info.get('username')
@@ -164,14 +168,39 @@ class Profile(object):
 
     def get_bonus(self) -> bool:
         if (datetime.now() - self.__bonus_date) > timedelta(hours=12):
-            self.__money += 12000
+            self.__money += BONUS
             self.__bonus_date = datetime.now()
             return True
         else:
             return False
 
+    def get_exp_on_previous_level(self) -> int:
+
+        def _counter(level: int, summary: int = 0) -> int:
+            if level < 1:
+                return summary
+            else:
+                summary += level * 2 * EXP_MULTIPLIER
+                return _counter(level - 1, summary)
+
+        return _counter(self.__level - 1)
+
     def get_exp_for_next_level(self) -> int:
-        return self.__level * EXP_MULTIPLIER
+
+        def _counter(level: int, summary: int = 0) -> int:
+            if level < 1:
+                return summary
+            else:
+                summary += level * 2 * EXP_MULTIPLIER
+                return _counter(level - 1, summary)
+
+        return _counter(self.__level)
+
+    def check_exp(self) -> bool:
+        if self.__exp >= self.get_exp_for_next_level():
+            self.__level_up()
+            return True
+        return False
 
     def blackjack_win_exp_add(self):
         self.__exp += BLACKJACK_WIN_EXP_BOOST
@@ -185,6 +214,6 @@ class Profile(object):
     def poker_game_exp_add(self):
         self.__exp += POKER_GAME_EXP_BOOST
 
-    def level_up(self) -> None:
+    def __level_up(self) -> None:
         self.__level += 1
         self.__money += LVL_BONUS

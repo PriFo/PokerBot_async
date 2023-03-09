@@ -94,10 +94,26 @@ class Hand:
     def add_card(self, card: Card) -> None:
         self.__cards.append(card)
 
+    def two_ace(self) -> bool:
+        ace_1: bool = False
+        for i in self.__cards:
+            if i.value == 1:
+                if not ace_1:
+                    ace_1 = True
+                else:
+                    return True
+        return False
+
     def get_summary(self):
         summary: int = 0
         for i in self.__cards:
-            summary += i.value
+            if i.value >= 10:
+                summary += 10
+            elif i.value == 1 and summary < 11:
+                summary += 11
+            else:
+                summary += i.value
+
         return summary
 
     def get_str_cards(self):

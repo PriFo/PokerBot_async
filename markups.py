@@ -41,7 +41,6 @@ def __do_main_markup() -> types.ReplyKeyboardMarkup:
 @print_func
 def __do_blackjack_offline_markup() -> types.InlineKeyboardMarkup:
     markup = types.InlineKeyboardMarkup()
-    # TODO: All callbacks
     btn1 = types.InlineKeyboardButton(text="Взять карту", callback_data='blackjack_offline_take_card')
     btn2 = types.InlineKeyboardButton(text="Удержать", callback_data='blackjack_offline_hold')
     markup.add(btn1, btn2)
@@ -55,7 +54,7 @@ def __do_poker_menu_markup() -> types.InlineKeyboardMarkup:
     # TODO: All callbacks
     btn1 = types.InlineKeyboardButton(text="Создать игру", callback_data='create_poker_game')
     btn2 = types.InlineKeyboardButton(text="Игры", callback_data='show_poker_games')
-    btn3 = types.InlineKeyboardButton(text="Закрыть меню", callback_data='return_to_menu')
+    btn3 = types.InlineKeyboardButton(text="Закрыть меню", callback_data='exit_poker_menu')
     markup.add(btn1, btn2)
     markup.add(btn3)
     return markup
@@ -77,7 +76,6 @@ def __do_profile_menu_markup() -> types.InlineKeyboardMarkup:
 @print_func
 def __do_blackjack_bet_markup() -> types.InlineKeyboardMarkup:
     markup = types.InlineKeyboardMarkup()
-    # TODO: Start blackjack
     btn1 = types.InlineKeyboardButton(text="Поднять ставку x2", callback_data='blackjack_up')
     btn2 = types.InlineKeyboardButton(text="Понизить ставку x2", callback_data='blackjack_down')
     btn3 = types.InlineKeyboardButton(text="Максимальная ставка", callback_data='blackjack_max')
