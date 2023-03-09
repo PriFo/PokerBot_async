@@ -1,4 +1,4 @@
 /config.env
 /.idea/
 /temp_txt/
-/log.sqlite
+log.sqlite

@@ -10,23 +10,28 @@ class BotBlackjack:
 
     def __init__(self):
         self.__hand: Hand = Hand()
+        self.__go_next: bool = True
 
     def check_chance(self, cards: Cards) -> bool:
-        summary_bot: int = self.__hand.get_summary()
-        need_to_win: int = 21 - summary_bot
-        count_of_ok: int = 0
-        count_of_all: int = len(cards.cards)
-        for i in cards.cards:
-            if i.value > 10:
-                if 10 <= need_to_win:
+        if self.__go_next:
+            summary_bot: int = self.__hand.get_summary()
+            need_to_win: int = 21 - summary_bot
+            count_of_ok: int = 0
+            count_of_all: int = len(cards.cards)
+            for i in cards.cards:
+                if i.value > 10:
+                    if 10 <= need_to_win:
+                        count_of_ok += 1
+                elif i.value <= need_to_win:
                     count_of_ok += 1
-            elif i.value <= need_to_win:
-                count_of_ok += 1
-        chance = count_of_ok / count_of_all
-        if chance < 0.35:
-            return False
+            chance = count_of_ok / count_of_all
+            if chance < 0.35:
+                self.__go_next = False
+                return False
+            else:
+                return True
         else:
-            return True
+            return self.__go_next
 
     @property
     def hand(self):
@@ -58,13 +63,41 @@ class Blackjack:
             self.__cards
         ))
 
-    def check_results(self) -> int:
-        if self.__user_hand.get_summary() < 21:
-            return 0
-        elif self.__user_hand.get_summary() == 21:
-            return 1
-        elif self.__user_hand.get_summary() > 21:
+    def check_results(self, hold: bool = False) -> int:
+        """
+        Проверка результата игры
+        :return: 0 - Продолжение игры;
+                1 - Победа с суммой карт больше, чем у бота;
+                2 - Победа с суммой карт 21;
+                3 - Победа с 2мя тузами;
+                4 - Победа, у бота больше 21;
+                5 - Поражение с суммой карт меньше, чем у бота;
+                6 - Поражение с суммой карт больше 21;
+                7 - Поражение, бот с суммой карт 21;
+                8 - Поражение, бот с 2мя тузами;
+                9 - Ничья
+        """
+        if self.__get_user_21():
             return 2
+        elif self.__get_bot_21():
+            return 7
+        elif self.__get_user_ace_win():
+            return 3
+        elif self.__get_bot_ace_win():
+            return 8
+        elif self.__get_user_lose():
+            return 6
+        elif self.__get_bot_lose():
+            return 4
+        elif hold and not self.__bot.check_chance(self.__cards):
+            if self.__get_draw():
+                return 9
+            elif self.__get_user_win():
+                return 1
+            else:
+                return 5
+        else:
+            return 0
 
     def add_user_card(self) -> None:
         self.__user_hand.add_card(self.__cards.get_card())
@@ -80,6 +113,30 @@ class Blackjack:
             self.__bet = MIN_BET
         else:
             self.__bet //= 2
+
+    def __get_draw(self) -> bool:
+        return self.__user_hand.get_summary() == self.__bot.hand.get_summary()
+
+    def __get_user_ace_win(self) -> bool:
+        return self.__user_hand.two_ace()
+
+    def __get_bot_ace_win(self) -> bool:
+        return self.__bot.hand.two_ace()
+
+    def __get_user_win(self) -> bool:
+        return self.__user_hand.get_summary() > self.__bot.hand.get_summary()
+
+    def __get_user_lose(self) -> bool:
+        return self.__user_hand.get_summary() > 21
+
+    def __get_bot_lose(self) -> bool:
+        return self.__bot.hand.get_summary() > 21
+
+    def __get_user_21(self) -> bool:
+        return self.__user_hand.get_summary() == 21
+
+    def __get_bot_21(self) -> bool:
+        return self.__bot.hand.get_summary() == 21
 
     @property
     def cards(self) -> Cards:

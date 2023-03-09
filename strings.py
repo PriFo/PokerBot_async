@@ -1,7 +1,6 @@
-# TODO: enter last commit in git and enter all editions in bot
 
 VERSION = 'beta 0.5'
-PATCH = ' patch '
+PATCH = ' patch 2084e312'
 DEV_ID = '517965582'
 DEV_INFO = '517965582 | pr1fo | Alex | Skrebnev\n'
 ASK_FOR_HELP = 'Version: ' + VERSION + PATCH + '\n\n' \

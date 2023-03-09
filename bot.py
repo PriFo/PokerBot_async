@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from os import getenv
+from random import randint
 
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
@@ -10,15 +11,18 @@ from aiogram.dispatcher.filters import Text
 
 from blackjack import Blackjack
 from bot_logging import print_func, print_async_func, LogDB
-from user import Profile
+from user import Profile, BLACKJACK_WIN_EXP_BOOST, BLACKJACK_GAME_EXP_BOOST, LVL_BONUS
 import strings
 import markups
 
 
+GOOD_EMOJI: list = ['😃', '☺️', '🙂', '🥳', '🤩', '😼', '']
+BAD_EMOJI: list = ['😞', '😕', '😔', '🙁', '😓', '🫡', '😢', '']
 PROFILES: dict = {}
 PROFILES_MESSAGES: dict = {}
 DB: LogDB = LogDB()
 BLACKJACK_OFFLINE: dict = {}
+POKER_MESSAGES: dict = {}
 load_dotenv('config.env')
 API_TOKEN: str = getenv('TOKEN')
 BOT: Bot = Bot(token=API_TOKEN)
@@ -35,6 +39,16 @@ class ProfileForm(StatesGroup):
 
 
 @print_async_func()
+async def check_lvl(profile: Profile):
+    if profile.check_exp():
+        await BOT.send_message(
+            chat_id=profile.user_id,
+            text=f'УРА! {GOOD_EMOJI[randint(0, 6)]} У вас новый уровень!\n'
+                 f'Ваш уровень: {profile.level}\nВам на счёт зачислено: {LVL_BONUS}'
+        )
+
+
+@print_async_func()
 async def get_profile_text(cur_profile: Profile) -> str:
     return f'Здравствуйте, {cur_profile.username}\n' \
            f'Ваш уровень: {cur_profile.level}\n' \
@@ -43,9 +57,84 @@ async def get_profile_text(cur_profile: Profile) -> str:
 
 
 @print_async_func()
+async def provide_result(game: Blackjack, result: int) -> None:
+    profile: Profile = PROFILES.get(str(game.user_id))
+    profile.count_blackjack += 1
+    if game.message_for_user.reply_markup is not None:
+        await game.message_for_user.delete_reply_markup()
+    if result in [1, 2, 4, 3]:
+        profile.exp += BLACKJACK_WIN_EXP_BOOST
+        profile.money += game.bet
+        profile.wins_blackjack += 1
+        await check_lvl(profile)
+        if result == 3:
+            await BOT.send_message(
+                chat_id=game.user_id,
+                text=f"ЗОЛОТОЕ ОЧКО!{GOOD_EMOJI[randint(0, 6)]}"
+                     f"\nВам начислено: {game.bet} у.е. и {BLACKJACK_WIN_EXP_BOOST} опыта",
+                reply_markup=markups.MAIN_MARKUP
+            )
+        else:
+            await BOT.send_message(
+                chat_id=game.user_id,
+                text=f"Победа!{GOOD_EMOJI[randint(0, 6)]}"
+                     f"\nВам начислено: {game.bet} у.е. и {BLACKJACK_WIN_EXP_BOOST} опыта",
+                reply_markup=markups.MAIN_MARKUP
+            )
+    elif result in [5, 6, 7, 8, 9]:
+        profile.exp += BLACKJACK_GAME_EXP_BOOST
+        profile.money -= game.bet
+        await check_lvl(profile)
+        if result == 8:
+            await BOT.send_message(
+                chat_id=game.user_id,
+                text=f'Поражение с золотым очком у дилера...{BAD_EMOJI[randint(0, 7)]}'
+                     f'\nВам начислено {BLACKJACK_GAME_EXP_BOOST} опыта',
+                reply_markup=markups.MAIN_MARKUP
+            )
+        elif result == 9:
+            await BOT.send_message(
+                chat_id=game.user_id,
+                text=f'Ничья.{BAD_EMOJI[randint(0, 7)]}'
+                     f'\nВам начислено {BLACKJACK_GAME_EXP_BOOST} опыта',
+                reply_markup=markups.MAIN_MARKUP
+            )
+        else:
+            await BOT.send_message(
+                chat_id=game.user_id,
+                text=f'Поражение...{BAD_EMOJI[randint(0, 7)]}\nВам начислено {BLACKJACK_GAME_EXP_BOOST} опыта',
+                reply_markup=markups.MAIN_MARKUP
+            )
+    profile.save_profile_info()
+
+
+@print_async_func()
+async def provide_take_card_user(game: Blackjack) -> None:
+    game.add_user_card()
+    game.message_for_user = await game.message_for_user.edit_text(
+        text=await get_blackjack_offline_user_text(game),
+        reply_markup=markups.BLACKJACK_OFFLINE_MARKUP
+    )
+
+
+@print_async_func()
+async def provide_take_card_bot(game: Blackjack) -> None:
+    game.add_bot_card()
+    if game.message_for_bot:
+        game.message_for_bot = await game.message_for_bot.edit_text(
+            text=await get_blackjack_offline_bot_text(game)
+        )
+    else:
+        game.message_for_bot = await BOT.send_message(
+            chat_id=str(game.user_id),
+            text=await get_blackjack_offline_bot_text(game)
+        )
+
+
+@print_async_func()
 async def get_blackjack_offline_bot_text(game: Blackjack) -> str:
     return f'Карты дилера: {game.bot.hand.get_str_cards()}\n' \
-           f'Сумма ваших карт: {game.user_hand.get_summary()}'
+           f'Сумма ваших карт: {game.bot.hand.get_summary()}'
 
 
 @print_async_func()
@@ -74,38 +163,30 @@ async def send_profile_msg(cur_profile: Profile, chat_id: int = None, message: t
 async def profile_info(query: types.CallbackQuery, **_):
     profile: Profile = PROFILES.get(str(query.from_user.id))
     msg_4_user: types.Message = PROFILES_MESSAGES.get(str(query.from_user.id))
+    exp_4_previous_lvl = profile.get_exp_on_previous_level()
+    exp_4_next_lvl = profile.get_exp_for_next_level()
     if profile:
         await query.answer(
             text='Сбор информации...'
         )
         exp: str = str(
-            ["█" if int(profile.exp / 6.25) > i else "░" for i in range(0, 16)]
+            ["█" if int(
+                (profile.exp - exp_4_previous_lvl) / ((exp_4_next_lvl - exp_4_previous_lvl) / 16)
+            ) > i else "░" for i in range(0, 16)]
         ).replace("\'", "").replace('[', '').replace(']', '').replace(',', '').replace(' ', '')
         text: str = f'Здравствуйте, {profile.username}\n' \
                     f'Ваш уровень: {profile.level}\n' \
-                    f'========={profile.exp}/100=========\n' \
+                    f'========={profile.exp}/{exp_4_next_lvl}=========\n' \
                     f'{exp}\n\n' \
                     f'Всего покер сессий: {profile.count_poker}\n' \
-                    f'Всего побед в покер: || {profile.wins_poker} ||\n\n' \
+                    f'Всего побед в покер: {profile.wins_poker}\n\n' \
                     f'Всего Blackjack сессий: {profile.count_blackjack}\n' \
-                    f'Всего побед в Blackjack: || {profile.wins_blackjack} ||'
+                    f'Всего побед в Blackjack: {profile.wins_blackjack}'
         if msg_4_user.text != text:
             await msg_4_user.edit_text(
                 text=text,
                 reply_markup=markups.PROFILE_MENU_MARKUP
             )
-        # await BOT.send_message(
-        #     chat_id=query.from_user.id,
-        #     text=f'Здравствуйте, {profile.username}\n'
-        #          f'Ваш уровень: {profile.level}\n'
-        #          f'========={profile.exp}/100=========\n'
-        #          f'{exp}\n\n'
-        #          f'Всего покер сессий: {profile.count_poker}\n'
-        #          f'Всего побед в покер: {profile.wins_poker}\n\n'
-        #          f'Всего Blackjack сессий: {profile.count_blackjack}\n'
-        #          f'Всего побед в Blackjack: {profile.wins_blackjack}',
-        #     reply_markup=markups.PROFILE_MENU_MARKUP
-        # )
     else:
         await query.answer(
             text='Я не могу выполнить запрос ;('
@@ -150,7 +231,7 @@ async def cancel_handler_change_profile_name(message: types.Message, state: FSMC
 
 @DP.message_handler(lambda message: not message.text.isdigit(), state=BlackjackForm.bet)
 @print_async_func()
-async def process_bet_invalid(message: types.Message, **_):
+async def process_bet_blackjack_invalid(message: types.Message, **_):
     await message.reply(
         text='Ставка должна быть числом...\n'
              'Введите свою ставку(только цифры)\n'
@@ -160,7 +241,7 @@ async def process_bet_invalid(message: types.Message, **_):
 
 @DP.message_handler(lambda message: message.text.isdigit(), state=BlackjackForm.bet)
 @print_async_func()
-async def process_bet_valid(message: types.Message, state: FSMContext, **_):
+async def process_bet_blackjack_valid(message: types.Message, state: FSMContext, **_):
     await state.update_data(bet=int(message.text))
     async with state.proxy() as data:
         game: Blackjack = BLACKJACK_OFFLINE.get(str(message.from_user.id))
@@ -222,14 +303,8 @@ async def manage_bet(query: types.CallbackQuery, **_):
 async def start_blackjack(query: types.CallbackQuery, **_) -> None:
     await query.answer(text='OK!')
     game: Blackjack = BLACKJACK_OFFLINE.get(str(query.from_user.id))
-    game.message_for_user = await game.message_for_user.edit_text(
-        text=await get_blackjack_offline_user_text(game),
-        reply_markup=markups.BLACKJACK_OFFLINE_MARKUP
-    )
-    game.message_for_bot = await BOT.send_message(
-        chat_id=query.from_user.id,
-        text='Дилер ожидает вашего хода'
-    )
+    await provide_take_card_user(game)
+    await provide_take_card_bot(game)
 
 
 @DP.callback_query_handler(text='blackjack_offline_take_card')
@@ -237,15 +312,16 @@ async def start_blackjack(query: types.CallbackQuery, **_) -> None:
 async def take_card_offline(query: types.CallbackQuery, **_) -> None:
     await query.answer('OK!')
     game: Blackjack = BLACKJACK_OFFLINE.get(str(query.from_user.id))
-    game.add_user_card()
-    game.message_for_user = await game.message_for_user.edit_text(
-        text=await get_blackjack_offline_user_text(game),
-        reply_markup=markups.BLACKJACK_OFFLINE_MARKUP
-    )
-    game.message_for_bot = await game.message_for_bot.edit_text(
-        text=''
-    )
-    # TODO: Add checking result of game in class Blackjack
+    await provide_take_card_user(game)
+    result: int = game.check_results()
+    if result > 0:
+        await provide_result(BLACKJACK_OFFLINE.pop(str(query.from_user.id)), result)
+    else:
+        if game.bot.check_chance(game.cards):
+            await provide_take_card_bot(game)
+        result = game.check_results()
+        if game.check_results() > 0:
+            await provide_result(BLACKJACK_OFFLINE.pop(str(query.from_user.id)), result)
 
 
 @DP.callback_query_handler(text='blackjack_offline_hold')
@@ -253,10 +329,11 @@ async def take_card_offline(query: types.CallbackQuery, **_) -> None:
 async def hold_offline(query: types.CallbackQuery, **_) -> None:
     await query.answer('OK!')
     game: Blackjack = BLACKJACK_OFFLINE.pop(str(query.from_user.id))
-    game.message_for_user = await game.message_for_user.edit_reply_markup(
-        reply_markup=None
-    )
-    # TODO: Add checking result of game in class Blackjack
+    game.message_for_user = await game.message_for_user.delete_reply_markup()
+    while game.bot.check_chance(game.cards):
+        await provide_take_card_bot(game)
+    result: int = game.check_results(hold=True)
+    await provide_result(game, result)
 
 
 @DP.callback_query_handler(text='blackjack_stop')
@@ -276,12 +353,41 @@ async def exit_blackjack(query: types.CallbackQuery, **_):
         )
 
 
+@DP.callback_query_handler(text='create_poker_game')
+@print_async_func()
+async def create_poker_game(query: types.CallbackQuery, **_):
+    ...
+
+
+@DP.callback_query_handler(text='show_poker_games')
+@print_async_func()
+async def show_poker_games(query: types.CallbackQuery, **_):
+    ...
+
+
+@DP.callback_query_handler(text='exit_poker_menu')
+@print_async_func()
+async def exit_poker_menu(query: types.CallbackQuery, **_):
+    try:
+        msg: types.Message = POKER_MESSAGES.pop(str(query.from_user.id))
+        await query.answer('OK')
+        await msg.edit_text(text='Меню закрыто', reply_markup=None)
+    except KeyError as _:
+        await query.answer(text="Don't try to use old message keyboard")
+    finally:
+        await BOT.send_message(
+            chat_id=query.from_user.id,
+            text=strings.MAIN_MENU,
+            reply_markup=markups.MAIN_MARKUP
+        )
+
+
 @DP.callback_query_handler(text='exit_profile')
 @print_async_func()
 async def exit_profile(query: types.CallbackQuery, **_):
     try:
         msg_4_user: types.Message = PROFILES_MESSAGES.pop(str(query.from_user.id))
-        await msg_4_user.edit_reply_markup(None)
+        await msg_4_user.delete_reply_markup()
         await query.answer('OK!')
     except AttributeError as _:
         await query.answer('Don\'t try to use old message keyboard')
@@ -352,7 +458,15 @@ async def answer_help_command(message: types.Message, **_):
 
 @DP.message_handler(commands=['start'])
 @print_async_func()
-async def answer_help_command(message: types.Message, **_):
+async def answer_start_command(message: types.Message, **_):
+    user_info: [dict, None] = DB.get_user_value(str(message.from_user.id))
+    if user_info is None:
+        DB.input_user_value(
+            user_id=message.from_user.id,
+            user_name=message.from_user.first_name,
+            user_lastname=message.from_user.last_name,
+            user_username=message.from_user.username
+        )
     await message.answer(
         text=strings.START_TEXT,
         reply_markup=markups.MAIN_MARKUP
@@ -369,6 +483,12 @@ async def answer_blackjack(message: types.Message, **_):
     if BLACKJACK_OFFLINE.get(str(message.from_user.id)):
         await message.answer(
             text='Закончите предыдущую игру'
+        )
+    elif PROFILES.get(str(message.from_user.id)).money < 10:
+        await message.answer(
+            text='У вас недостаточно средств для начала игры...\n'
+                 'Для начала игры требуется 10 у.е.',
+            reply_markup=markups.MAIN_MARKUP
         )
     else:
         BLACKJACK_OFFLINE[str(message.from_user.id)] = Blackjack(message.from_user.id)
@@ -405,7 +525,7 @@ async def answer_main_menu(message: types.Message, **_):
 
 @print_async_func()
 async def answer_poker(message: types.Message, **_):
-    await message.answer(
+    POKER_MESSAGES[str(message.from_user.id)] = await message.answer(
         text='Вы в меню покера\nВыберите действие',
         reply_markup=markups.POKER_MENU_MARKUP
     )
@@ -441,9 +561,11 @@ async def answer_nothing(message: types.Message, **_):
 @DP.message_handler()
 @print_async_func()
 async def message_handler(message: types.Message, **_):
-    profile = PROFILES.get(str(message.from_user.id))
+    profile: [Profile, None] = PROFILES.get(str(message.from_user.id))
     if profile is None:
         PROFILES[str(message.from_user.id)] = Profile(str(message.from_user.id))
+    else:
+        profile.update_profile_info()
     if 'что умеет бот' in message.text.lower():
         await answer_bot_skills(message)
     elif 'профиль' in message.text.lower():
